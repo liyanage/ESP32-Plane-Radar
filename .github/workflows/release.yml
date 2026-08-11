@@ -34,12 +34,14 @@ jobs:
           python-version: "3.11"
 
       - name: Install PlatformIO
-        run: pip install --upgrade platformio
+        run: pip install -r requirements-build.txt
 
       - name: Build and merge
         run: |
           pio run -e supermini
           pio run -t merge -e supermini
+          pio run -e xiao-c6
+          pio run -t merge -e xiao-c6
 
       - name: Package release files
         run: |
@@ -50,6 +52,8 @@ jobs:
           mkdir -p dist
           cp .pio/build/supermini/firmware-merged.bin "dist/plane-radar-${VERSION}-full.bin"
           cp .pio/build/supermini/firmware.bin "dist/plane-radar-${VERSION}-ota.bin"
+          cp .pio/build/xiao-c6/firmware-merged.bin "dist/plane-radar-${VERSION}-xiao-c6-full.bin"
+          cp .pio/build/xiao-c6/firmware.bin "dist/plane-radar-${VERSION}-xiao-c6-ota.bin"
           for image in dist/*.bin; do
             sha256sum "$image" > "${image}.sha256"
           done

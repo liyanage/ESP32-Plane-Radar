@@ -66,7 +66,7 @@ int performGetWithPoll(HTTPClient& http, unsigned long timeout_ms) {
 
 bool readResponseBodyWithPoll(HTTPClient& http, String& payload,
                               unsigned long timeout_ms) {
-  WiFiClient* stream = http.getStreamPtr();
+  auto* stream = http.getStreamPtr();
   if (stream == nullptr) {
     return false;
   }

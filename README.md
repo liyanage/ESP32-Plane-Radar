@@ -4,7 +4,7 @@
 
 **3D printed case (STL + assembly):** [MakerWorld](https://makerworld.com/en/models/2872376-esp32-plane-radar-live-ads-b-on-a-round-display#profileId-3207083) · **Firmware:** [Releases](../../releases)
 
-Firmware for an **ESP32-C3 Super Mini** and a **1.28″ round GC9A01** display (240×240). Shows a circular **ADS-B radar** around your configured location, with flight routes, detailed aircraft models, local weather/time, browser settings, and authenticated OTA updates.
+Firmware for an **ESP32-C3 Super Mini** or **Seeed Studio XIAO ESP32-C6** and a **1.28″ round GC9A01** display (240×240). Shows a circular **ADS-B radar** around your configured location, with flight routes, detailed aircraft models, local weather/time, browser settings, and authenticated OTA updates.
 
 ## What it does
 
@@ -187,20 +187,59 @@ src/
 | SCL (SCLK) | GPIO **4** |
 | BOOT (user) | GPIO **9** |
 
+## Wiring (GC9A01 ↔ XIAO ESP32-C6)
+
+The XIAO pin labels and their underlying GPIO numbers are both shown below. The
+onboard BOOT button is already connected to GPIO 9, so it needs no external
+wiring.
+
+| Display | XIAO ESP32-C6 |
+|---------|----------------|
+| VCC | 3V3 |
+| GND | GND |
+| RST | D0 / GPIO **0** |
+| CS | D1 / GPIO **1** |
+| DC | D2 / GPIO **2** |
+| SDA (MOSI) | D10 / GPIO **18** |
+| SCL (SCLK) | D8 / GPIO **19** |
+| BOOT (user) | onboard button / GPIO **9** |
+
 ## Build
+
+Create the project-local build environment once:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-build.txt
+```
+
+Then use `.venv/bin/pio` in place of `pio` below if PlatformIO is not already on
+your `PATH`.
 
 ```bash
 pio run -t upload
 pio device monitor
 ```
 
-- PlatformIO env: **`supermini`**
+- Default PlatformIO env: **`supermini`**
 - Serial: **115200** baud
 - USB CDC on boot enabled in `platformio.ini` for the Super Mini
 
+For the XIAO ESP32-C6, select its environment explicitly:
+
+```bash
+pio run -e xiao-c6
+pio run -e xiao-c6 -t upload
+pio device monitor -b 115200
+```
+
+The `xiao-c6` environment uses a pinned pioarduino platform release with Arduino
+3.3.11 and ESP-IDF 5.5.5. PlatformIO downloads that compiler and framework on the
+first build.
+
 ### Web-flashable release image
 
-Single `.bin` for [esptool-js](https://espressif.github.io/esptool-js/) and similar tools (ESP32-C3, 4 MB, flash at **0x0**):
+Single `.bin` for [esptool-js](https://espressif.github.io/esptool-js/) and similar tools (4 MB, flash at **0x0**):
 
 ```bash
 chmod +x scripts/merge-firmware.sh   # once
@@ -219,6 +258,16 @@ Or via PlatformIO only (output: `.pio/build/supermini/firmware-merged.bin`):
 pio run -e supermini
 pio run -t merge -e supermini
 ```
+
+For the XIAO ESP32-C6, pass `--env xiao-c6` to the script or run:
+
+```bash
+pio run -e xiao-c6
+pio run -t merge -e xiao-c6
+```
+
+The merged C6 image is `.pio/build/xiao-c6/firmware-merged.bin` and must be
+flashed as an ESP32-C6 image at offset `0x0`.
 
 Put the board in download mode (hold **BOOT**, tap **RESET**), then flash with Chrome/Edge over USB.
 
@@ -242,8 +291,8 @@ Never upload the merged/full image to the OTA form; it contains the bootloader a
 
 | Workflow | When | Output |
 |----------|------|--------|
-| [Build](.github/workflows/build.yml) | Push / PR to `main` | Artifact `plane-radar-supermini` (merged + split `.bin` files, ~90 days) |
-| [Release](.github/workflows/release.yml) | Git tag `v*` (e.g. `v1.0.0`) | GitHub Release `-full.bin` and `-ota.bin` assets + checksums |
+| [Build](.github/workflows/build.yml) | Push / PR to `main` | Artifacts `plane-radar-supermini` and `plane-radar-xiao-c6` (merged + split `.bin` files, ~90 days) |
+| [Release](.github/workflows/release.yml) | Git tag `v*` (e.g. `v1.0.0`) | C3 and XIAO C6 `-full.bin` and `-ota.bin` assets + checksums |
 
 To ship a version users can download:
 

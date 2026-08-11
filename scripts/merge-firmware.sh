@@ -56,4 +56,9 @@ fi
 mkdir -p "$(dirname "$OUT")"
 cp "$MERGED" "$OUT"
 echo "Wrote ${OUT}"
-echo "Flash at offset 0x0 with chip ESP32-C3, 4MB flash (Web Serial flasher)."
+case "$ENV" in
+  supermini) CHIP="ESP32-C3" ;;
+  xiao-c6) CHIP="ESP32-C6" ;;
+  *) CHIP="the chip selected by PlatformIO environment '$ENV'" ;;
+esac
+echo "Flash at offset 0x0 with chip ${CHIP}, 4MB flash (Web Serial flasher)."
